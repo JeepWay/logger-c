@@ -111,7 +111,7 @@ void _log_message(int level, const char *file, int line, const char *msg_fmt,
     })
 #endif
 
-void _log_set_attribute(const char *name, const char *, size_t offset,
+void _log_set_attribute(const char *name, const char *member, size_t offset,
                         size_t size, void *value);
 #define log_set_dump_fn(name, value) \
     _log_set_member(name, log_dump_fn, dump_fn, value)

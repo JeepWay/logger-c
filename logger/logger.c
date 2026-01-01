@@ -165,16 +165,43 @@ void _log_message(int level, const char *file, int line, const char *msg_fmt,
     unlock();
 }
 
-static const char *modifiable_members = "dump_fn fmt_fn level quiet date_fmt";
+static const struct {
+    const char *name;
+    size_t offset;
+    size_t size;
+} allowed_members[] = {
+    {"dump_fn", offsetof(struct handler, dump_fn),
+     sizeof(((struct handler *) 0)->dump_fn)},
+    {"fmt_fn", offsetof(struct handler, fmt_fn),
+     sizeof(((struct handler *) 0)->fmt_fn)},
+    {"level", offsetof(struct handler, level),
+     sizeof(((struct handler *) 0)->level)},
+    {"quiet", offsetof(struct handler, quiet),
+     sizeof(((struct handler *) 0)->quiet)},
+    {"date_fmt", offsetof(struct handler, date_fmt),
+     sizeof(((struct handler *) 0)->date_fmt)},
+};
 
 void _log_set_attribute(const char *name, const char *member, size_t offset,
                         size_t size, void *value)
 {
     name = name ? name : ROOT_HANDLER_NAME;
 
-    if (!strstr(modifiable_members, member)) {
+    bool safe = false;
+    for (size_t i = 0; i < sizeof(allowed_members) / sizeof(allowed_members[0]);
+         i++) {
+        if (strcmp(allowed_members[i].name, member) == 0 &&
+            allowed_members[i].offset == offset &&
+            allowed_members[i].size == size) {
+            safe = true;
+            break;
+        }
+    }
+
+    if (!safe) {
         fprintf(DEFAULT_STRAEM,
-                "[Logger C] Handler's member can't be modified: %s\n", member);
+                "[Logger C] Security Alert: Invalid access to member '%s'\n",
+                member);
         return;
     }
 
