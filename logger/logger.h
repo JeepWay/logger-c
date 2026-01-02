@@ -51,8 +51,6 @@ static const char *level_colors[] = {"\x1b[94m", "\x1b[36m", "\x1b[32m",
                                      "\x1b[33m", "\x1b[31m", "\x1b[35m"};
 
 typedef struct record record_t;
-typedef struct handler handler_t;
-typedef struct logger logger_t;
 
 typedef void (*log_dump_fn)(record_t *rec);
 typedef void (*log_fmt_fn)(record_t *rec, const char *time_buf);
@@ -71,16 +69,6 @@ struct record {
     const char *hd_date_fmt;
 };
 
-struct handler {
-    const char *name;
-    log_dump_fn dump_fn;
-    log_fmt_fn fmt_fn;
-    void *fp;
-    size_t level;
-    bool quiet;
-    const char *date_fmt;
-};
-
 int log_add_file_handler(const char *filename, const char *filemode,
                          size_t level, const char *name);
 int log_add_stream_handler(FILE *fp, size_t level, const char *name);
@@ -94,33 +82,11 @@ void _log_message(int level, const char *file, int line, const char *msg_fmt,
 #define log_error(...) _log_message(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define log_fatal(...) _log_message(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
-// methods to set handler properties
-#if __LOGGER_HAS_TYPEOF
-#define _log_set_member(name, type, member, value)                          \
-    ({                                                                      \
-        typeof(((struct handler *) 0)->member) __tmp = (value);             \
-        _log_set_attribute(name, #member, offsetof(struct handler, member), \
-                           sizeof(((struct handler *) 0)->member), &__tmp); \
-    })
-#else
-#define _log_set_member(name, type, member, value)                          \
-    ({                                                                      \
-        type __tmp = (value);                                               \
-        _log_set_attribute(name, #member, offsetof(struct handler, member), \
-                           sizeof(__tmp), &__tmp);                          \
-    })
-#endif
-
-void _log_set_attribute(const char *name, const char *member, size_t offset,
-                        size_t size, void *value);
-#define log_set_dump_fn(name, value) \
-    _log_set_member(name, log_dump_fn, dump_fn, value)
-#define log_set_fmt_fn(name, value) \
-    _log_set_member(name, log_fmt_fn, fmt_fn, value)
-#define log_set_level(name, value) _log_set_member(name, size_t, level, value)
-#define log_set_quiet(name, value) _log_set_member(name, bool, quiet, value)
-#define log_set_date_fmt(name, value) \
-    _log_set_member(name, const char *, date_fmt, value)
+void log_set_level(const char *name, size_t level);
+void log_set_quiet(const char *name, bool quiet);
+void log_set_date_fmt(const char *name, const char *value);
+void log_set_fmt_fn(const char *name, log_fmt_fn value);
+void log_set_dump_fn(const char *name, log_dump_fn value);
 
 void log_set_lock(log_LockFn fn, void *fp);
 
@@ -131,4 +97,4 @@ void color_fmt2(record_t *rec, const char *time_buf);
 void no_color_fmt1(record_t *rec, const char *time_buf);
 void no_color_fmt2(record_t *rec, const char *time_buf);
 
-#endif
+#endif /* LOG_H */

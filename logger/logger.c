@@ -26,6 +26,19 @@
 #include <string.h>
 #include <time.h>
 
+typedef struct handler handler_t;
+typedef struct logger logger_t;
+
+struct handler {
+    const char *name;
+    log_dump_fn dump_fn;
+    log_fmt_fn fmt_fn;
+    void *fp;
+    size_t level;
+    bool quiet;
+    const char *date_fmt;
+};
+
 struct logger {
     log_LockFn lock;
     handler_t handlers[MAX_HANDLERS];
@@ -182,8 +195,8 @@ static const struct {
      sizeof(((struct handler *) 0)->date_fmt)},
 };
 
-void _log_set_attribute(const char *name, const char *member, size_t offset,
-                        size_t size, void *value)
+static void _log_set_attribute(const char *name, const char *member,
+                               size_t offset, size_t size, void *value)
 {
     name = name ? name : ROOT_HANDLER_NAME;
 
@@ -212,6 +225,49 @@ void _log_set_attribute(const char *name, const char *member, size_t offset,
         }
     }
     fprintf(DEFAULT_STRAEM, "[Logger C] Handler's name not found: %s\n", name);
+}
+
+// methods to set handler properties
+#if __LOGGER_HAS_TYPEOF
+#define _log_set_member(name, type, member, value)                          \
+    ({                                                                      \
+        typeof(((struct handler *) 0)->member) __tmp = (value);             \
+        _log_set_attribute(name, #member, offsetof(struct handler, member), \
+                           sizeof(((struct handler *) 0)->member), &__tmp); \
+    })
+#else
+#define _log_set_member(name, type, member, value)                          \
+    ({                                                                      \
+        type __tmp = (value);                                               \
+        _log_set_attribute(name, #member, offsetof(struct handler, member), \
+                           sizeof(__tmp), &__tmp);                          \
+    })
+#endif
+
+void log_set_dump_fn(const char *name, log_dump_fn value)
+{
+    _log_set_member(name, log_dump_fn, dump_fn, value);
+}
+
+void log_set_fmt_fn(const char *name, log_fmt_fn value)
+{
+    _log_set_member(name, log_fmt_fn, fmt_fn, value);
+}
+
+void log_set_level(const char *name, size_t value)
+{
+    printf("Setting level to %zu\n", value);
+    _log_set_member(name, size_t, level, value);
+}
+
+void log_set_quiet(const char *name, bool value)
+{
+    _log_set_member(name, bool, quiet, value);
+}
+
+void log_set_date_fmt(const char *name, const char *value)
+{
+    _log_set_member(name, const char *, date_fmt, value);
 }
 
 void dump_log(record_t *rec)
