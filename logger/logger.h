@@ -82,8 +82,8 @@ void _log_message(int level, const char *file, int line, const char *msg_fmt,
 #define log_error(...) _log_message(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define log_fatal(...) _log_message(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
-void log_set_level(const char *name, size_t level);
-void log_set_quiet(const char *name, bool quiet);
+void log_set_level(const char *name, size_t value);
+void log_set_quiet(const char *name, bool value);
 void log_set_date_fmt(const char *name, const char *value);
 void log_set_fmt_fn(const char *name, log_fmt_fn value);
 void log_set_dump_fn(const char *name, log_dump_fn value);
