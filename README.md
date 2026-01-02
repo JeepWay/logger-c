@@ -3,15 +3,14 @@
 
 ![root-default.png](fig/root-default.png)
 
-A lightweight, flexible logger library for the C language, inspired by [log4.c](https://github.com/rxi/log.c) project and Python's [logging](https://docs.python.org/3/library/logging.html) package. 
+A lightweight, flexible logger library for the C language, refactored from [log.c](https://github.com/rxi/log.c) project and inspired from Python's [logging](https://docs.python.org/3/library/logging.html) package. 
 This library provides a simple yet powerful way to log messages with different levels, handlers, and formatting options. It supports both stream and file handlers, and customizable log formats.
 
 ## Features
-- Default root handler (a stream handler) for immediate use, you don't need to create it.
-- More file and stream handlers can be added.
 - Multiple log levels: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`.
-- Customizable log formatting with color support for terminals.
-- Flexible date/time formatting.
+- **Zero-Config Initialization**: Uses `__attribute__((constructor))` for automatic root handler setup, ensuring the logger is ready before using.
+- **Independent Handler Settings**: Each handler can be individually set to `quiet` mode. 
+- **Highly customizable ability**: Handlers can be independently configured for easily assigned specific date and text formats.
 
 ## Simple Usage
 1. Clone or download the repository:
@@ -39,7 +38,7 @@ This library provides a simple yet powerful way to log messages with different l
     gcc -o main logger/logger.c main.c
     ./main
     ```
-4. You will see the result in the console like the top picture.
+4. You will see the similar result in the console like the top picture.
 
 
 ## Basic Usage
@@ -174,11 +173,10 @@ Contributions are welcome! Please submit a pull request or open an issue on the 
 * Implement a filter function, like the [filter class](https://docs.python.org/3/library/logging.html#filter-objects) in Python's logging package, to filter log messages based on the maximum log level and handler name.
 * Make the sequential search of handlers more efficient, for example, hashing the handler names into id.
 * Prevent adding handlers with the same name.
-* Add more safety checks in [logger.c](logger/logger.c#L175) to ensure robustness and prevent potential issues.
 
 
 ## Reference
-* [log4.c](https://github.com/rxi/log.c)
+* [log.c](https://github.com/rxi/log.c)
 * [Python logging module](https://docs.python.org/3/library/logging.html) - Comprehensive guide on Python's logging package.
 * [Logging in Python](https://realpython.com/python-logging/) - An article to introduce the logging package.
 
