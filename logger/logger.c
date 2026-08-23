@@ -110,7 +110,7 @@ static int log_add_handler(const char *name, log_dump_fn dump_fn,
 int log_add_file_handler(const char *filename, const char *filemode,
                          size_t level, const char *name)
 {
-    assert(level >= LOG_TRACE && level <= LOG_FATAL);
+    assert(level < LOG_LEVEL_MAX);
     assert(name);
     filename = filename ? filename : DEFAULT_FILE_NAME;
     filemode = filemode ? filemode : DEFAULT_FILE_MODE;
@@ -128,7 +128,7 @@ int log_add_file_handler(const char *filename, const char *filemode,
 
 int log_add_stream_handler(FILE *fp, size_t level, const char *name)
 {
-    assert(level >= LOG_TRACE && level <= LOG_FATAL);
+    assert(level < LOG_LEVEL_MAX);
     assert(name);
     fp = fp ? fp : DEFAULT_STRAEM;
     return log_add_handler(name, dump_log, color_fmt1, fp, level, false,
@@ -159,16 +159,16 @@ void _log_message(int level, const char *file, int line, const char *msg_fmt,
     };
 
     handler_t *rh = &L.handlers[ROOT_HANDLER];
-    if (!rh->quiet && level >= rh->level) {
+    if (!rh->quiet && (size_t)level >= rh->level) {
         update_record(&rec, rh);
         va_start(rec.ap, msg_fmt);
         rh->dump_fn(&rec);
         va_end(rec.ap);
     }
 
-    for (int i = ROOT_HANDLER + 1; i < L.count && L.handlers[i].dump_fn; i++) {
+    for (size_t i = ROOT_HANDLER + 1; i < L.count && L.handlers[i].dump_fn; i++) {
         handler_t *hd = &L.handlers[i];
-        if (!hd->quiet && level >= hd->level) {
+        if (!hd->quiet && (size_t)level >= hd->level) {
             update_record(&rec, hd);
             va_start(rec.ap, msg_fmt);
             hd->dump_fn(&rec);
@@ -218,9 +218,9 @@ static void _log_set_attribute(const char *name, const char *member,
         return;
     }
 
-    for (int i = ROOT_HANDLER; i < L.count; i++) {
+    for (size_t i = ROOT_HANDLER; i < L.count; i++) {
         if (strcmp(L.handlers[i].name, name) == 0) {
-            memcpy((void *) &L.handlers[i] + offset, value, size);
+            memcpy((char *)&L.handlers[i] + offset, value, size);
             return;
         }
     }
@@ -229,19 +229,19 @@ static void _log_set_attribute(const char *name, const char *member,
 
 // methods to set handler properties
 #if __LOGGER_HAS_TYPEOF
-#define _log_set_member(name, type, member, value)                          \
-    ({                                                                      \
+#define _log_set_member(name, type, member, value)                         \
+    do {                                                                    \
         typeof(((struct handler *) 0)->member) __tmp = (value);             \
         _log_set_attribute(name, #member, offsetof(struct handler, member), \
                            sizeof(((struct handler *) 0)->member), &__tmp); \
-    })
+    } while (0)
 #else
-#define _log_set_member(name, type, member, value)                          \
-    ({                                                                      \
+#define _log_set_member(name, type, member, value)                         \
+    do {                                                                    \
         type __tmp = (value);                                               \
         _log_set_attribute(name, #member, offsetof(struct handler, member), \
                            sizeof(__tmp), &__tmp);                          \
-    })
+    } while (0)
 #endif
 
 void log_set_dump_fn(const char *name, log_dump_fn value)

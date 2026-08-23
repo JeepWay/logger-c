@@ -41,7 +41,8 @@ enum LOG_LEVEL {
     LOG_INFO,
     LOG_WARN,
     LOG_ERROR,
-    LOG_FATAL
+    LOG_FATAL,
+    LOG_LEVEL_MAX
 };
 
 static const char *level_strings[] = {"TRACE", "DEBUG", "INFO",
